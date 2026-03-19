@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package AuthServer.Protos;
+
+// Login
+message LoginRequest {
+  string username = 1;
+  string password = 2;
+}
+
+message LoginResponse {
+  bool success = 1;
+  string message = 2;
+  string token = 3; 
+}
+
+// Registration
+message RegisterRequest {
+  string username = 1;
+  string password = 2;
+}
+
+message RegisterResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// Global Wrapper Packet
+message Packet {
+  oneof payload {
+    LoginRequest login_req = 1;
+    LoginResponse login_res = 2;
+    RegisterRequest register_req = 3;
+    RegisterResponse register_res = 4;
+  }
+}

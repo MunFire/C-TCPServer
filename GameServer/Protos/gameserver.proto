@@ -1,0 +1,187 @@
+syntax = "proto3";
+
+// Namespace for C# generated code
+option csharp_namespace = "GameServer.Protos";
+
+package game;
+
+// Main wrapper for all game-related packets
+message GamePacket {
+  oneof payload {
+    // 1. Connection & Auth
+    C2S_EnterGameReq enterGameReq = 1;
+    S2C_EnterGameRes enterGameRes = 2;
+
+    // 1.5 Character Management
+    C2S_GetCharacterListReq getCharacterListReq = 13;
+    S2C_GetCharacterListRes getCharacterListRes = 14;
+    
+    C2S_CreateCharacterReq createCharacterReq = 15;
+    S2C_CreateCharacterRes createCharacterRes = 16;
+    
+    C2S_SelectCharacterReq selectCharacterReq = 17;
+    S2C_SelectCharacterRes selectCharacterRes = 18;
+
+    // 2. Movement Sync
+    C2S_MoveReq moveReq = 3;
+    S2C_MoveSync moveSync = 4;
+    
+    // 3. Spawning / Despawning
+    S2C_SpawnPlayer spawnPlayer = 5;
+    S2C_DespawnPlayer despawnPlayer = 6;
+    
+    // 4. Channel Navigation
+    C2S_ChangeChannelReq changeChannelReq = 7;
+    S2C_ChangeChannelRes changeChannelRes = 8;
+    
+    // 5. Chat & Broadcast
+    C2S_ChatReq chatReq = 9;
+    S2C_ChatRes chatRes = 10;
+    
+    // 6. Heartbeat
+    C2S_Ping ping = 11;
+    S2C_Pong pong = 12;
+  }
+}
+
+// ---------------------------------------------------------
+// 1. Connection & Auth
+// ---------------------------------------------------------
+
+// Client -> Server: Sends the Auth Token received from AuthServer
+message C2S_EnterGameReq {
+  string token = 1;
+}
+
+// Server -> Client: Result of token verification. 
+// At this stage, you are NOT in the game yet. You must select a character next.
+message S2C_EnterGameRes {
+  bool success = 1;
+  string message = 2;
+}
+
+// ---------------------------------------------------------
+// 1.5 Character Management
+// ---------------------------------------------------------
+
+message CharacterInfo {
+  string name = 1;
+  int32 level = 2;
+  int32 hp = 3;
+}
+
+// Request to list all characters for this account
+message C2S_GetCharacterListReq {
+}
+
+message S2C_GetCharacterListRes {
+  repeated CharacterInfo characters = 1;
+}
+
+message C2S_CreateCharacterReq {
+  string name = 1;
+}
+
+message S2C_CreateCharacterRes {
+  bool success = 1;
+  string message = 2;
+}
+
+message C2S_SelectCharacterReq {
+  string name = 1;
+}
+
+// When successful, the player actually spawns into the channel.
+message S2C_SelectCharacterRes {
+  bool success = 1;
+  string message = 2;
+  int32 myPlayerId = 3;
+}
+
+// ---------------------------------------------------------
+// 2. Movement Sync
+// ---------------------------------------------------------
+
+// Client -> Server: "I moved to these coordinates"
+message C2S_MoveReq {
+  float x = 1;
+  float y = 2;
+  float z = 3;
+}
+
+// Server -> Client: "Player [playerId] moved to these coordinates"
+message S2C_MoveSync {
+  int32 playerId = 1;
+  float x = 2;
+  float y = 3;
+  float z = 4;
+}
+
+// ---------------------------------------------------------
+// 3. Spawning / Despawning (To see other players)
+// ---------------------------------------------------------
+
+// Server -> Client: "A new player appeared in your channel"
+// Used when I enter the channel, or when someone else enters
+message S2C_SpawnPlayer {
+  int32 playerId = 1;
+  string username = 2;
+  float x = 3;
+  float y = 4;
+  float z = 5;
+}
+
+// Server -> Client: "A player left your channel"
+message S2C_DespawnPlayer {
+  int32 playerId = 1;
+}
+
+// ---------------------------------------------------------
+// 4. Channel Navigation
+// ---------------------------------------------------------
+
+// Client -> Server: "Move me to Channel X"
+message C2S_ChangeChannelReq {
+  int32 channelId = 1;
+}
+
+// Server -> Client: Result of the channel change request
+message S2C_ChangeChannelRes {
+  bool success = 1;
+  string message = 2;
+  int32 channelId = 3;
+}
+
+// ---------------------------------------------------------
+// 5. Chat & Broadcast
+// ---------------------------------------------------------
+
+// Client -> Server: "Send a chat message"
+// If isGlobal is true, the message will be broadcasted to all channels.
+// Otherwise, it will only be sent to the current channel.
+message C2S_ChatReq {
+  string message = 1;
+  bool isGlobal = 2; 
+}
+
+// Server -> Client: "Receive a chat message"
+message S2C_ChatRes {
+  int32 senderId = 1;
+  string senderUsername = 2;
+  string message = 3;
+  bool isGlobal = 4;
+}
+
+// ---------------------------------------------------------
+// 6. Heartbeat
+// ---------------------------------------------------------
+
+// Client -> Server: "Are you there?"
+message C2S_Ping {
+  int64 timestamp = 1;
+}
+
+// Server -> Client: "Yes, I'm here."
+message S2C_Pong {
+  int64 timestamp = 1;
+}

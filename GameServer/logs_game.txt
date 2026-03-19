@@ -1,0 +1,13 @@
+========================================
+    GameServer - In-Game Logic Core     
+========================================
+[RedisManager] Connected to Redis DB.
+[GameServer] Started on 0.0.0.0:9001
+[GameServer] Client connected: 127.0.0.1:11564
+[ClientHandler] Verifying token: f42a16e4c0e849119e67086356ff3207
+[Channel 1] testuser joined. (Total: 1)
+[ClientHandler] testuser successfully entered GameServer.
+[GameServer] Client connected: 127.0.0.1:7633
+[ClientHandler] Verifying token: ee314879c92745a281bfd63969f48c95
+[Channel 1] testuser1 joined. (Total: 2)
+[ClientHandler] testuser1 successfully entered GameServer.

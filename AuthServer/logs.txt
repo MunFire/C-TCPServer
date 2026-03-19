@@ -1,0 +1,18 @@
+========================================
+    AuthServer - TCP/Protobuf Server    
+========================================
+[TcpServer] Started on 0.0.0.0:9000
+[TcpServer] Client connected: 127.0.0.1:11216
+[ClientHandler] Session started.
+[ClientHandler] Login request for user: test1
+[ClientHandler] User test1 failed to login: 존재하지 않는 아이디입니다.
+[ClientHandler] Login request for user: testuser
+[ClientHandler] User testuser failed to login: 비밀번호가 일치하지 않습니다.
+[ClientHandler] Registration request for user: testuser
+[ClientHandler] Registration result for testuser: Username already exists
+[ClientHandler] Registration request for user: testuser1
+[ClientHandler] Registration result for testuser1: Registration successful
+[ClientHandler] Login request for user: testuser1
+[ClientHandler] User testuser1 logged in.
+[ClientHandler] Invalid Protobuf message received (Disconnecting).
+[ClientHandler] Session ended.
