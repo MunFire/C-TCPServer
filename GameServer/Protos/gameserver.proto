@@ -41,6 +41,13 @@ message GamePacket {
     // 6. Heartbeat
     C2S_Ping ping = 11;
     S2C_Pong pong = 12;
+
+    // 7. Combat & Monsters
+    C2S_AttackReq attackReq = 19;
+    S2C_AttackSync attackSync = 20;
+    S2C_SpawnMonster spawnMonster = 21;
+    S2C_DespawnMonster despawnMonster = 22;
+    S2C_MonsterMoveSync monsterMoveSync = 23;
   }
 }
 
@@ -184,4 +191,44 @@ message C2S_Ping {
 // Server -> Client: "Yes, I'm here."
 message S2C_Pong {
   int64 timestamp = 1;
+}
+
+// ---------------------------------------------------------
+// 7. Combat & Monsters
+// ---------------------------------------------------------
+
+message C2S_AttackReq {
+  int32 targetId = 1;
+  bool isMonster = 2; // true if targeting a monster, false if targeting a player
+}
+
+message S2C_AttackSync {
+  int32 attackerId = 1;
+  bool isAttackerMonster = 2;
+  int32 targetId = 3;
+  bool isTargetMonster = 4;
+  int32 damage = 5;
+  int32 targetHp = 6;
+  bool isDead = 7;
+}
+
+message S2C_SpawnMonster {
+  int32 monsterId = 1;
+  int32 monsterType = 2; // 0: Normal (HP 50), 1: Boss (HP 200)
+  int32 hp = 3;
+  int32 maxHp = 4;
+  float x = 5;
+  float y = 6;
+  float z = 7;
+}
+
+message S2C_DespawnMonster {
+  int32 monsterId = 1;
+}
+
+message S2C_MonsterMoveSync {
+  int32 monsterId = 1;
+  float x = 2;
+  float y = 3;
+  float z = 4;
 }

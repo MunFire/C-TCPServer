@@ -18,8 +18,17 @@ namespace GameServer.Core
 
         // Stats
         public int Hp { get; set; } = 100;
+        public int MaxHp { get; set; } = 100;
         public int Level { get; set; } = 1;
         public int Exp { get; set; } = 0;
+        public bool IsDead => Hp <= 0;
+
+        public void TakeDamage(int damage)
+        {
+            if (IsDead) return;
+            Hp -= damage;
+            if (Hp < 0) Hp = 0;
+        }
 
         private readonly ClientHandler _session;
 

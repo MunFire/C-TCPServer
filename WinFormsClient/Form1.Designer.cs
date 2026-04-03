@@ -22,6 +22,8 @@ namespace WinFormsClient
         private System.Windows.Forms.Label lblCoordinates;
         private System.Windows.Forms.ComboBox cmbChannel;
         private System.Windows.Forms.Button btnChangeChannel;
+        private System.Windows.Forms.ListBox lstMonsters;
+        private System.Windows.Forms.Button btnAttack;
         
         // UI Elements - Character Selection
         private System.Windows.Forms.Panel charSelectPanel;
@@ -63,6 +65,8 @@ namespace WinFormsClient
             this.btnMoveDown = new System.Windows.Forms.Button();
             this.cmbChannel = new System.Windows.Forms.ComboBox();
             this.btnChangeChannel = new System.Windows.Forms.Button();
+            this.lstMonsters = new System.Windows.Forms.ListBox();
+            this.btnAttack = new System.Windows.Forms.Button();
             this.gameLog = new System.Windows.Forms.ListBox();
             this.txtChat = new System.Windows.Forms.TextBox();
             this.btnSendChat = new System.Windows.Forms.Button();
@@ -166,6 +170,8 @@ namespace WinFormsClient
             this.gamePanel.Controls.Add(this.chkGlobalChat);
             this.gamePanel.Controls.Add(this.btnChangeChannel);
             this.gamePanel.Controls.Add(this.cmbChannel);
+            this.gamePanel.Controls.Add(this.lstMonsters);
+            this.gamePanel.Controls.Add(this.btnAttack);
             this.gamePanel.Controls.Add(this.btnMoveDown);
             this.gamePanel.Controls.Add(this.btnMoveUp);
             this.gamePanel.Controls.Add(this.lblCoordinates);
@@ -228,6 +234,25 @@ namespace WinFormsClient
             this.btnChangeChannel.Text = "Change Channel";
             this.btnChangeChannel.UseVisualStyleBackColor = true;
             this.btnChangeChannel.Click += new System.EventHandler(this.BtnChangeChannel_Click);
+            // 
+            // lstMonsters
+            // 
+            this.lstMonsters.FormattingEnabled = true;
+            this.lstMonsters.ItemHeight = 15;
+            this.lstMonsters.Location = new System.Drawing.Point(340, 50);
+            this.lstMonsters.Name = "lstMonsters";
+            this.lstMonsters.Size = new System.Drawing.Size(180, 79);
+            this.lstMonsters.TabIndex = 9;
+            // 
+            // btnAttack
+            // 
+            this.btnAttack.Location = new System.Drawing.Point(340, 135);
+            this.btnAttack.Name = "btnAttack";
+            this.btnAttack.Size = new System.Drawing.Size(180, 23);
+            this.btnAttack.TabIndex = 10;
+            this.btnAttack.Text = "Attack Selected";
+            this.btnAttack.UseVisualStyleBackColor = true;
+            this.btnAttack.Click += new System.EventHandler(this.BtnAttack_Click);
             // 
             // gameLog
             // 
@@ -329,7 +354,7 @@ namespace WinFormsClient
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(420, 480);
+            this.ClientSize = new System.Drawing.Size(540, 480);
             this.Controls.Add(this.gamePanel); // Added GamePanel first 
             this.Controls.Add(this.charSelectPanel); // Added char select panel second
             this.Controls.Add(this.authPanel); // Added AuthPanel third so it sits on top if they overlap, but they are toggled

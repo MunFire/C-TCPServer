@@ -88,6 +88,9 @@ namespace GameServer.Network
                             case GamePacket.PayloadOneofCase.SelectCharacterReq:
                                 await HandleSelectCharacterAsync(packet.SelectCharacterReq);
                                 break;
+                            case GamePacket.PayloadOneofCase.AttackReq:
+                                await HandleAttackAsync(packet.AttackReq);
+                                break;
                             default:
                                 Console.WriteLine($"[{MyPlayer?.Username}] Unknown packet: {packet.PayloadCase}");
                                 break;
@@ -324,6 +327,77 @@ namespace GameServer.Network
                 Pong = new S2C_Pong { Timestamp = req.Timestamp }
             };
             await SendPacketAsync(pongPacket);
+        }
+
+        private async Task HandleAttackAsync(C2S_AttackReq req)
+        {
+            if (MyPlayer == null || CurrentChannel == null) return;
+
+            if (req.IsMonster)
+            {
+                if (CurrentChannel._monsters.TryGetValue(req.TargetId, out var monster))
+                {
+                    if (monster.IsDead) return;
+
+                    // Distance Check
+                    float dx = MyPlayer.X - monster.X;
+                    float dy = MyPlayer.Y - monster.Y;
+                    float dz = MyPlayer.Z - monster.Z;
+                    float distance = (float)Math.Sqrt(dx * dx + dy * dy + dz * dz);
+                    
+                    float attackRange = 5.0f; // Attack Range
+
+                    if (distance > attackRange)
+                    {
+                        Console.WriteLine($"[{MyPlayer.Username}] Attack failed: Target {monster.Id} is too far ({distance:F1} > {attackRange}).");
+                        return; // Ignore if too far
+                    }
+
+                    // Deal Damage
+                    int damage = new Random().Next(10, 25); // Random damage between 10 and 24
+                    monster.TakeDamage(damage, MyPlayer.Id);
+
+                    Console.WriteLine($"[{MyPlayer.Username}] Attacked Monster {monster.Id} for {damage} dmg. (HP: {monster.Hp}/{monster.MaxHp})");
+
+                    var attackSync = new GamePacket
+                    {
+                        AttackSync = new S2C_AttackSync
+                        {
+                            AttackerId = MyPlayer.Id,
+                            IsAttackerMonster = false,
+                            TargetId = monster.Id,
+                            IsTargetMonster = true,
+                            Damage = damage,
+                            TargetHp = monster.Hp,
+                            IsDead = monster.IsDead
+                        }
+                    };
+
+                    await CurrentChannel.BroadcastAsync(attackSync);
+
+                    if (monster.IsDead)
+                    {
+                        Console.WriteLine($"[Channel {CurrentChannel.ChannelId}] Monster {monster.Id} has been slain by {MyPlayer.Username}.");
+                        // We could remove it from dictionary, or keep it for respawns.
+                        // Let's remove and send despawn for now.
+                        CurrentChannel._monsters.TryRemove(monster.Id, out _);
+                        
+                        var despawnPacket = new GamePacket
+                        {
+                            DespawnMonster = new S2C_DespawnMonster { MonsterId = monster.Id }
+                        };
+                        await CurrentChannel.BroadcastAsync(despawnPacket);
+
+                        // Give EXP to player
+                        MyPlayer.Exp += (monster.MonsterType == 1) ? 50 : 10;
+                    }
+                }
+            }
+            else
+            {
+                // PvP not implemented for now
+                Console.WriteLine($"[{MyPlayer.Username}] tried to attack player {req.TargetId}, but PvP is disabled.");
+            }
         }
     }
 }

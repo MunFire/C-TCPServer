@@ -24,6 +24,9 @@ namespace WinFormsClient
         private float _myY = 0;
         private float _myZ = 0;
 
+        // Current Channel Monsters
+        private System.Collections.Concurrent.ConcurrentDictionary<int, S2C_SpawnMonster> _monsters = new();
+
         // Mode: Auth or Game
         private bool _isInGame = false;
         
@@ -278,9 +281,53 @@ namespace WinFormsClient
 
                         case GamePacket.PayloadOneofCase.ChangeChannelRes:
                             if (packet.ChangeChannelRes.Success)
+                            {
                                 LogGame($"[Channel] {packet.ChangeChannelRes.Message}");
+                                // Clear monsters when changing channel
+                                _monsters.Clear();
+                                this.Invoke((Action)(() => lstMonsters.Items.Clear()));
+                            }
                             else
+                            {
                                 LogGame($"[Channel Error] {packet.ChangeChannelRes.Message}");
+                            }
+                            break;
+
+                        case GamePacket.PayloadOneofCase.SpawnMonster:
+                            var sm = packet.SpawnMonster;
+                            _monsters.TryAdd(sm.MonsterId, sm);
+                            UpdateMonsterList();
+                            break;
+
+                        case GamePacket.PayloadOneofCase.DespawnMonster:
+                            var dm = packet.DespawnMonster;
+                            _monsters.TryRemove(dm.MonsterId, out _);
+                            UpdateMonsterList();
+                            break;
+
+                        case GamePacket.PayloadOneofCase.MonsterMoveSync:
+                            var mms = packet.MonsterMoveSync;
+                            if (_monsters.TryGetValue(mms.MonsterId, out var movingMonster))
+                            {
+                                movingMonster.X = mms.X;
+                                movingMonster.Y = mms.Y;
+                                movingMonster.Z = mms.Z;
+                                UpdateMonsterList(); // Update UI to show new positions
+                            }
+                            break;
+
+                        case GamePacket.PayloadOneofCase.AttackSync:
+                            var atk = packet.AttackSync;
+                            string attackerName = atk.IsAttackerMonster ? $"Monster {atk.AttackerId}" : $"Player {atk.AttackerId}";
+                            string targetName = atk.IsTargetMonster ? $"Monster {atk.TargetId}" : $"Player {atk.TargetId}";
+                            LogGame($"[Combat] {attackerName} attacked {targetName} for {atk.Damage} damage! (HP: {atk.TargetHp})");
+                            
+                            // Update local monster hp
+                            if (atk.IsTargetMonster && _monsters.TryGetValue(atk.TargetId, out var mTarget))
+                            {
+                                mTarget.Hp = atk.TargetHp;
+                                UpdateMonsterList();
+                            }
                             break;
 
                         case GamePacket.PayloadOneofCase.ChatRes:
@@ -403,6 +450,55 @@ namespace WinFormsClient
             
             // Clear input box after sending
             txtChat.Text = "";
+        }
+
+        private void UpdateMonsterList()
+        {
+            if (this.InvokeRequired)
+            {
+                this.Invoke(new Action(UpdateMonsterList));
+                return;
+            }
+
+            lstMonsters.Items.Clear();
+            foreach (var m in _monsters.Values)
+            {
+                string typeStr = m.MonsterType == 1 ? "Boss" : "Normal";
+                lstMonsters.Items.Add($"[{m.MonsterId}] {typeStr} - HP:{m.Hp}/{m.MaxHp} POS:({m.X},{m.Y},{m.Z})");
+            }
+        }
+
+        private async void BtnAttack_Click(object sender, EventArgs e)
+        {
+            if (_stream == null || !_tcpClient.Connected) return;
+
+            if (lstMonsters.SelectedItem == null)
+            {
+                MessageBox.Show("공격할 몬스터를 선택하세요.");
+                return;
+            }
+
+            string selected = lstMonsters.SelectedItem.ToString();
+            // Parse ID from "[ID] Type - HP..."
+            int startIdx = selected.IndexOf('[') + 1;
+            int endIdx = selected.IndexOf(']');
+            if (startIdx > 0 && endIdx > startIdx)
+            {
+                if (int.TryParse(selected.Substring(startIdx, endIdx - startIdx), out int targetId))
+                {
+                    var attackPacket = new GamePacket
+                    {
+                        AttackReq = new C2S_AttackReq
+                        {
+                            TargetId = targetId,
+                            IsMonster = true
+                        }
+                    };
+
+                    attackPacket.WriteDelimitedTo(_stream);
+                    await _stream.FlushAsync();
+                }
+            }
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
