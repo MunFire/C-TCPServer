@@ -29,9 +29,17 @@ namespace GameServer
             var dbManager = new MySqlManager(mysqlHost, mysqlPort, mysqlUser, mysqlPass, mysqlDb);
             var channelManager = new GameServer.Core.ChannelManager(dbManager);
 
-            // 3. Start TCP Server
+            // 3. Start SAEA Listener
             var cts = new CancellationTokenSource();
-            var tcpServer = new TcpServer(serverPort, redisManager, channelManager, dbManager);
+            
+            var listener = new Listener(serverPort, 1000, 1024 * 4); // 1000 max connections, 4KB buffer
+            listener.OnClientConnected = (session) => 
+            {
+                // Hook the newly connected session to a new handler
+                var handler = new ClientHandler(session, redisManager, channelManager, dbManager);
+            };
+            
+            listener.Start();
 
             // Catch Ctrl+C to shut down gracefully
             Console.CancelKeyPress += (s, e) =>
@@ -41,7 +49,15 @@ namespace GameServer
                 cts.Cancel();
             };
 
-            await tcpServer.StartAsync(cts.Token);
+            // Main loop wait
+            try
+            {
+                await Task.Delay(-1, cts.Token);
+            }
+            catch (TaskCanceledException)
+            {
+            }
+            
             Console.WriteLine("GameServer terminated gracefully.");
         }
     }

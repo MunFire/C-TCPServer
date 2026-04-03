@@ -31,10 +31,16 @@ namespace AuthServer
             var dbManager = new MySqlManager(mysqlHost, mysqlPort, mysqlUser, mysqlPass, mysqlDb);
             var redisManager = new RedisManager(redisConn);
 
-            // 3. Initialize & Start TCP Server
-            var tcpServer = new TcpServer(serverIp, serverPort, dbManager, redisManager);
-
+            // 3. Initialize & Start SAEA Listener
             using var cts = new CancellationTokenSource();
+
+            var listener = new Listener(serverPort, 1000, 1024 * 4);
+            listener.OnClientConnected = (session) =>
+            {
+                var handler = new ClientHandler(session, dbManager, redisManager);
+            };
+            
+            listener.Start();
 
             // Handle graceful shutdown on Ctrl+C
             Console.CancelKeyPress += (sender, e) =>
@@ -44,7 +50,11 @@ namespace AuthServer
                 cts.Cancel();
             };
 
-            await tcpServer.StartAsync(cts.Token);
+            try
+            {
+                await Task.Delay(-1, cts.Token);
+            }
+            catch (TaskCanceledException) { }
             
             Console.WriteLine("[System] Server cleanly exited.");
         }
