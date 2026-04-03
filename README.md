@@ -5,16 +5,10 @@
 ## 사용된 언어 및 핵심 기술
 
 * **언어**: C#
-* **네트워크 통신**: 순수 TCP 소켓 기반의 ** IOCP (SocketAsyncEventArgs) 비동기 통신 엔진 자체 구축**
-  * `BufferManager`를 통한 대규모 메모리(Byte Array) 사전 할당 및 조각 임대(Slicing)로 C#의 Garbage Collection(GC) 렉(Pause) 원천 차단
-  * 각각 1,000개 규모의 `SAEA(Recv/Send)` 풀링 시스템을 도입해 수만 명의 동접을 버티도록 설계
-  * `NetworkStream` 의존을 탈피하고 TCP 분절 현상을 막기 위한 자체 프로토콜 VarInt 파서(Parser) 내장
+* **네트워크 통신**: 순수 TCP 소켓 기반의 IOCP (SocketAsyncEventArgs) 비동기 통신 엔진 자체 구축
+  * `BufferManager`를 통한 메모리(Byte Array) 사전 할당 및 조각 임대(Slicing)로 C#의 Garbage Collection(GC) 렉(Pause) 원천 차단
+  * 각각 1,000개 규모의 `SAEA(Recv/Send)` 풀링 시스템 설계
 * **패킷 직렬화**: **Google Protobuf (Protocol Buffers)**
-  * 패킷의 빠르고 가벼운 전송 보장
-  * 미래에 C++, Python, Unity(C#) 등 다른 언어로 작성된 클라이언트를 붙이기 용이하도록 이기종 간의 호환성 확보
-  * `Length-Prefixed` 방식 사용으로 패킷 경계 완벽 제어
-* **클라이언트 UI**: Windows Forms (테스트 클라이언트)
-* **스레드 및 동기화**: `ConcurrentDictionary`를 활용한 채널/유저 관리 및 `Task.Run` 기반 백그라운드 AI 루프 구동
 
 ## 🏗 서버 아키텍처
 
