@@ -72,3 +72,6 @@ Thumbs.db
 *.swp
 *.*~
 ~*.*
+
+# Custom directories
+History/
